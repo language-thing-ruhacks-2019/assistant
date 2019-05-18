@@ -57,7 +57,7 @@ app.intent("ask word", (conv, {"any": word}) => {
 
 
 app.intent("play", (conv) => {
-  const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.lang, conv.data.language);
+  const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.language, conv.data.lang);
   conv.ask("Well done!");
   conv.ask(new BasicCard({
     text: resp.text,
