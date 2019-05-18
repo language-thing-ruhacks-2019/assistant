@@ -3,7 +3,7 @@ const words = require('./words/random.js');
 const fetch = require('node-fetch');
 
 const {
-  dialogflow, BasicCard, Suggestions, Image, SimpleResponse
+  dialogflow, BasicCard, Suggestions, Image, SimpleResponse, List
 } = require("actions-on-google");
 
 
@@ -50,7 +50,7 @@ app.intent("level yes", async (conv) => {
 });
 
 app.intent("level no", (conv) => {
-    conv.close(`Oh, ok. See you later then!`);
+  conv.close(`Oh, ok. See you later then!`);
 });
 
 
@@ -95,7 +95,7 @@ async function getRandomWord(level, lang){
 
 app.intent("play", (conv) => {
   const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.language, conv.data.lang);
-  conv.ask("Well done!");
+  conv.ask(response.title);
   conv.ask(new BasicCard({
     text: resp.text,
     subtitle: resp.subtitle,
@@ -107,6 +107,68 @@ app.intent("play", (conv) => {
     display: 'CROPPED',
   }));
 });
+
+app.intent("stats", (conv) => {
+  const resp = generateLanguages(["English", "Russian"], {
+    English: 'No level',
+    Russian: 'Advanced'
+  });
+  conv.ask('This is a list example.');
+
+  conv.ask(new List({
+      title: 'Your Language Statistics',
+      items: resp,
+    }
+  ));
+});
+
+
+function generateLanguages(languages, langData) {
+  const items = {};
+
+  languages.forEach(language => {
+    items[language] = {
+      title: language,
+      description: langData[language],
+      image: new Image({
+        url: getFlag(langs[language]),
+        alt: 'Image alternate text',
+      }),
+    }
+  })
+}
+
+function getFlag(lang) {
+  let url = "http://www.printableflags.net/wp-content/uploads/2017/04/flag-globe-kcmkrp8xi-GhSZQu.jpg";
+
+  switch (lang) {
+    case "en":
+      url = "https://i.redd.it/68cdrlhal0hz.png";
+      break;
+    case "de":
+      url = "https://i.imgur.com/l66r6qD.png";
+      break;
+    case "ru":
+      url = "https://i.imgur.com/o17VdrS.png";
+      break;
+    case "ko":
+      url = "https://i.imgur.com/9XXSOLm.png";
+      break;
+    case "jp":
+      url = "https://i.imgur.com/S9FGjLY.png";
+      break;
+    case "cn":
+      url = "https://i.imgur.com/lRRyqhP.png";
+      break;
+    case "hi":
+      url = "https://i.imgur.com/2lkA5Vf.png";
+      break;
+    case "fr":
+      url = "https://i.imgur.com/kZS5Vur.png";
+      break;
+  }
+  return url;
+}
 
 function generateBlurb(score, total, level, language, lang) {
   const response = {};
@@ -120,13 +182,14 @@ function generateBlurb(score, total, level, language, lang) {
     response.subtitle = `You got a perfect score, congratulations!`;
     response.text = `You could understand ${score}/${total} words in ${language} at ${levels[level]}.`;
 
-    if (level < 5) response.text += ` Why not try ${levels[++level]}`
+    if (level < 5) response.text += ` You have mastered ${language}: ${levels[level]}! You should give ${levels[++level]} a shot!`
+    else response.text += `You have achieved highest level in ${language}`
 
   } else if (mark > 0.85) {
     response.title = `Excellent!`;
-    response.subtitle = `You are very close! Keep up the great work!`;
+    response.subtitle = `You got near perfect! Keep up the great work!`;
 
-    if (level < 5) response.text += ` Why not try ${levels[++level]}`
+    if (level < 5) response.text += ` Perhaps also try ${levels[++level]}`
 
   } else if (mark > 0.7) {
     response.title = `Pretty good!`;
@@ -141,30 +204,8 @@ function generateBlurb(score, total, level, language, lang) {
     if (level > 1) response.text += ` Perhaps try ${levels[--level]}`
   }
 
-  let url = "http://www.printableflags.net/wp-content/uploads/2017/04/flag-globe-kcmkrp8xi-GhSZQu.jpg";
 
-  switch (lang) {
-    case "en":
-      url = "https://i.redd.it/68cdrlhal0hz.png";
-      break;
-    case "de":
-      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg";
-      break;
-    case "ru":
-      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg";
-      break;
-    case "jp":
-      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg"
-      break;
-    case "cn":
-      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg";
-      break;
-    case "fr":
-      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg"
-      break;
-  }
-
-  response.url = url;
+  response.url = getFlag(lang);
 
   return response;
 }
