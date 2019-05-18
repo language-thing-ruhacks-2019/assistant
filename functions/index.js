@@ -33,7 +33,7 @@ app.intent("level_select", (conv, {'difficulty': lev}) => {
 app.intent("play", (conv) => {
   conv.data.right = 10;
   conv.data.total = 10;
-  const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.lang, conv.data.language);
+  const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.language, conv.data.lang);
   conv.ask("Well done!");
   conv.ask(new BasicCard({
     text: resp.text,
