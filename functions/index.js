@@ -1,4 +1,6 @@
 const functions = require('firebase-functions');
+const words = require('./words/random.js');
+const fetch = require('node-fetch');
 
 const {
   dialogflow, BasicCard, Suggestions, Image, SimpleResponse
@@ -26,18 +28,22 @@ app.intent("practice_select", (conv, {'language': lang}) => {
 app.intent("level_select", (conv, {'difficulty': lev}) => {
   lev--;
   conv.data.lev = lev;
-  conv.data.total = 10;
+  conv.data.total = 0;
   conv.ask(`Alright, we'll practice ${levels[lev]} ${conv.data.language}.\n
           Are you ready to start training?`);
 });
 
-app.intent("level yes", (conv) => {
-    //get random word from wordlist, and store it
-    //translate to language
-    //get word from language
+app.intent("level yes", async (conv) => {
+    const word = words(conv.data.lev);
+    const trans = (await fetch(`https://speech-server-ruhacks-2019.appspot.com/api/trans/en-US/${conv.data.lang}/${word}`));
+    const transText = trans.TranslatedText;
+    const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${word}`;
 
-    conv.ask(`What is blank in ${conv.data.language}?`);
-    conv.data.total--;
+    conv.ask( new SimpleResponse({
+        speech: `<speak>What does <audio src="${url}"></audio>mean?</speak>`,
+        text: `What does ${transText} mean`
+    }));
+    conv.data.total++;
 });
 
 app.intent("level no", (conv) => {
@@ -46,11 +52,17 @@ app.intent("level no", (conv) => {
 
 
 app.intent("ask word", (conv, {"any": word}) => {
-    //if word = word
-    conv.ask(`You said ${word}`);
+    if(conv.data.total < 3){
+        //if word = word
+        conv.ask(`That's correct!\n
+        Now, what does AUDIO mean?`);
+        //else
+        // the correct word is WORD. Your next word is BLANK
 
-
-    //else
+        conv.data.total++;
+    } else{
+        conv.ask(`You finished all 10 words. Here are some stats`);
+    }
 });
 
 
