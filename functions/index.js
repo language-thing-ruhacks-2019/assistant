@@ -18,7 +18,7 @@ app.intent("Hello World",  conv => {
 app.intent("practice_select", (conv, {'language': lang}) => {
   conv.data.lang = langs[lang];
   conv.data.language = lang;
-  conv.ask(`you selected ${lang} `);
+  conv.ask(`Sure, let's practice ${lang}. \n`);
   conv.ask(`What level would you like to practice`);
   conv.ask(new Suggestions(["Beginner", "Elementary", "Intermediate", "Upper Intermediate", "Advanced", "Proficient"]));
 
@@ -27,7 +27,7 @@ app.intent("practice_select", (conv, {'language': lang}) => {
 app.intent("level_select", (conv, {'difficulty': lev}) => {
   lev--;
   conv.data.lev = lev;
-  conv.ask(`Alright, starting practice at ${levels[lev]} for ${conv.data.language}`);
+  conv.ask(`Alright, we'll practice ${levels[lev]} ${conv.data.language}.\n`);
 });
 
 
@@ -212,7 +212,7 @@ const langs =  {
   "Turkmen": "tk",
   "Tagalog": "tl",
   "Tswana": "tn",
-  "Tonga (Tonga Islands)": "to",
+  "Tonga": "to",
   "Turkish": "tr",
   "Tsonga": "ts",
   "Tatar": "tt",
