@@ -1,4 +1,3 @@
-
 const functions = require('firebase-functions');
 
 const {
@@ -7,18 +6,18 @@ const {
 
 
 // Instantiate the Dialogflow client.
-const app = dialogflow({ debug: true });
+const app = dialogflow({debug: true});
 
 
 // Handlers go here..
-app.intent("Hello World",  conv => {
+app.intent("Hello World", conv => {
   conv.ask(`<speak>Hello world <audio src="https://speech-server-ruhacks-2019.appspot.com/api/sound/ru-RU/blyat"></audio></speak>`)
 });
 
 app.intent("practice_select", (conv, {'language': lang}) => {
   conv.data.lang = langs[lang];
   conv.data.language = lang;
-  conv.ask(`you selected ${lang} `);
+  conv.ask(`Sure, let's practice ${lang}. \n`);
   conv.ask(`What level would you like to practice`);
   conv.ask(new Suggestions(["Beginner", "Elementary", "Intermediate", "Upper Intermediate", "Advanced", "Proficient"]));
 
@@ -27,28 +26,90 @@ app.intent("practice_select", (conv, {'language': lang}) => {
 app.intent("level_select", (conv, {'difficulty': lev}) => {
   lev--;
   conv.data.lev = lev;
-  conv.ask(`Alright, starting practice at ${levels[lev]} for ${conv.data.language}`);
+  conv.ask(`Alright, we'll practice ${levels[lev]} ${conv.data.language}.\n`);
 });
 
 
 app.intent("play", (conv) => {
-  const score = conv.data.right;
+  conv.data.right = 10;
+  conv.data.total = 10;
+  const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.lang, conv.data.language);
   conv.ask("Well done!");
   conv.ask(new BasicCard({
-    text: `You could understand ${conv.data.right}/${conv.data.total} words in ${conv.data.language} at ${levels[conv.data.lev]}
-    Why not try ${levels[++conv.data.lev]}
-    `, //
-    subtitle: 'you scored perfect',
+    text: resp.text,
+    subtitle: resp.subtitle,
     title: 'Well done!',
     image: new Image({
-      url: 'https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg',
+      url: resp.url,
       alt: 'Image alternate text',
     }),
     display: 'CROPPED',
   }));
 });
 
-const langs =  {
+function generateBlurb(score, total, level, language, lang) {
+  const response = {};
+  const mark = score / total;
+
+  response.text = `You could understand ${score}/${total} words in ${language} at ${levels[level]}.`;
+
+
+  if (mark === 1) {
+    response.title = `Flawless!`;
+    response.subtitle = `You got a perfect score, congratulations!`;
+    response.text = `You could understand ${score}/${total} words in ${language} at ${levels[level]}.`;
+
+    if (level < 5) response.text += ` Why not try ${levels[++level]}`
+
+  } else if (mark > 0.85) {
+    response.title = `Excellent!`;
+    response.subtitle = `You are very close! Keep up the great work!`;
+
+    if (level < 5) response.text += ` Why not try ${levels[++level]}`
+
+  } else if (mark > 0.7) {
+    response.title = `Pretty good!`;
+    response.subtitle = `You got most of the words, but you need a bit more practice.`;
+  } else if (mark > 0.35) {
+    response.title = `On track!`;
+    response.subtitle = `You are getting familiar with the vocabulary, but you need to practice more.`;
+  } else {
+    response.title = `Long way ahead`;
+    response.subtitle = `You missed most words, but practice makes perfect.`;
+
+    if (level > 1) response.text += ` Perhaps try ${levels[--level]}`
+  }
+
+  let url = "http://www.printableflags.net/wp-content/uploads/2017/04/flag-globe-kcmkrp8xi-GhSZQu.jpg";
+
+  switch (lang) {
+    case "en":
+      url = "https://i.redd.it/68cdrlhal0hz.png";
+      break;
+    case "de":
+      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg";
+      break;
+    case "ru":
+      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg";
+      break;
+    case "jp":
+      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg"
+      break;
+    case "cn":
+      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg";
+      break;
+    case "fr":
+      url = "https://www.publicdomainpictures.net/pictures/250000/velka/german-flag.jpg"
+      break;
+  }
+
+  response.url = url;
+
+  return response;
+}
+
+
+const langs = {
   "Afar": "aa",
   "Abkhazian": "ab",
   "Avestan": "ae",
@@ -212,7 +273,7 @@ const langs =  {
   "Turkmen": "tk",
   "Tagalog": "tl",
   "Tswana": "tn",
-  "Tonga (Tonga Islands)": "to",
+  "Tonga": "to",
   "Turkish": "tr",
   "Tsonga": "ts",
   "Tatar": "tt",
