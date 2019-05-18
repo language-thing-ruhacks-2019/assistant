@@ -2,8 +2,6 @@ const functions = require('firebase-functions');
 
 const {
   dialogflow,
-  BasicCard,
-  SimpleResponse
 } = require("actions-on-google");
 
 
@@ -18,18 +16,22 @@ app.intent("Hello World",  conv => {
 
 app.intent("practice_select", (conv, {'language': lang}) => {
   conv.data.lang = langs[lang];
+  conv.data.language = lang;
   conv.ask(`you selected ${lang} `);
   conv.ask(`What level would you like to practice`);
 });
 
 app.intent("level_select", (conv, {'difficulty': lev}) => {
-  conv.ask(`Alright, starting practice at level ${1}`);
+  conv.ask(`Alright, starting practice at ${levels[lev]} for ${conv.data.language}`);
 });
 
-app.intent("level_select", (conv, {'difficulty': lev}) => {
-  conv.ask(`Alright, starting practice at level ${1}`);
+app.intent("start_practice", (conv) => {
+  conv.ask(`bp`);
 });
 
+app.intent("last_score", (conv) => {
+  conv.ask(`bp`);
+});
 
 const langs =  {
   "Afar": "aa",
@@ -217,7 +219,7 @@ const langs =  {
   "Chinese": "zh",
   "Zulu": "zu"
 }
-const levels = ["A1, Elementary", "A2, Beginner", "B1, Intermediate", "B2 Upper Intermediate"];
+const levels = ["A1, Elementary", "A2, Beginner", "B1, Intermediate", "B2, Upper Intermediate", "C1, Advanced", "C2, Proficient"];
 
 
 exports.test = functions.https.onRequest(app);
