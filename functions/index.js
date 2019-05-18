@@ -34,14 +34,17 @@ app.intent("level_select", (conv, {'difficulty': lev}) => {
 });
 
 app.intent("level yes", async (conv) => {
-    const word = words(conv.data.lev);
-    const trans = (await fetch(`https://speech-server-ruhacks-2019.appspot.com/api/trans/en-US/${conv.data.lang}/${word}`));
-    const transText = trans.TranslatedText;
-    const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${word}`;
+    const pair = await getRandomWord(conv.data.lev, conv.data.lang);
+    const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${pair.word}`;
+    conv.data.lastWord = pair.word;
 
     conv.ask( new SimpleResponse({
+        text: `What does ${pair.trans} mean`,
         speech: `<speak>What does <audio src="${url}"></audio>mean?</speak>`,
-        text: `What does ${transText} mean`
+    }));
+    conv.ask(new BasicCard({
+        description: pair.trans,
+        display: 'CROPPED',
     }));
     conv.data.total++;
 });
@@ -51,21 +54,43 @@ app.intent("level no", (conv) => {
 });
 
 
-app.intent("ask word", (conv, {"any": word}) => {
+app.intent("ask word", async (conv, {"any": guess}) => {
     if(conv.data.total < 3){
-        //if word = word
-        conv.ask(`That's correct!\n
-        Now, what does AUDIO mean?`);
-        //else
-        // the correct word is WORD. Your next word is BLANK
+        if(guess === conv.data.lastWord){
+            conv.ask('That\'s correct!\n');
+        }
+        else{
+            conv.ask(`Sorry, you said ${guess}, but the correct answer is ${conv.data.lastWord}.\n`);
+        }
+
+        const pair = await getRandomWord(conv.data.lev, conv.data.lang);
+        const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${pair.word}`;
+        conv.data.lastWord = pair.word;
+        conv.ask( new SimpleResponse({
+            //text: `What does ${pair.trans} mean?`,
+            text: `What does BLANK mean?`,
+            speech: `<speak>Now, what does <audio src="${url}"></audio>mean?</speak>`,
+        }));
 
         conv.data.total++;
-    } else{
-        conv.ask(`You finished all 10 words. Here are some stats`);
+    } else if (conv.data.total === 3){
+        if(guess === conv.data.lastWord){
+            conv.ask('That\'s correct!\n');
+        }
+        else{
+            conv.ask(`Sorry, you said ${guess}, but the correct answer is ${conv.data.lastWord}.\n`);
+        }
+        conv.ask(`You finished all 3 words. Here are some stats:`);
     }
 });
 
+async function getRandomWord(level, lang){
+    const word = words(level);
+    const trans = (await fetch(`https://speech-server-ruhacks-2019.appspot.com/api/trans/en-US/${lang}/${word}`));
+    const transText = trans.OriginalText;
 
+    return {"word": word, "trans": transText};
+}
 
 
 app.intent("play", (conv) => {
