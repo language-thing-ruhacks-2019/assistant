@@ -48,15 +48,6 @@ app.intent("play", (conv) => {
   }));
 });
 
-app.intent("Ask vocab word", (conv) => {
-    conv.ask(`What is dog in Korean?`);
-});
-
-app.intent("Ask again", (conv, {'any': word}) => {
-    conv.ask(`You answered ${word}`);
-    webhookClient.setContext('Ask vocab word')
-});
-
 const langs =  {
   "Afar": "aa",
   "Abkhazian": "ab",
