@@ -26,13 +26,37 @@ app.intent("practice_select", (conv, {'language': lang}) => {
 app.intent("level_select", (conv, {'difficulty': lev}) => {
   lev--;
   conv.data.lev = lev;
-  conv.ask(`Alright, we'll practice ${levels[lev]} ${conv.data.language}.\n`);
+  conv.data.total = 10;
+  conv.ask(`Alright, we'll practice ${levels[lev]} ${conv.data.language}.\n
+          Are you ready to start training?`);
+});
+
+app.intent("level yes", (conv) => {
+    //get random word from wordlist, and store it
+    //translate to language
+    //get word from language
+
+    conv.ask(`What is blank in ${conv.data.language}?`);
+    conv.data.total--;
+});
+
+app.intent("level no", (conv) => {
+    conv.close(`Oh, ok. See you later then!`);
 });
 
 
+app.intent("ask word", (conv, {"any": word}) => {
+    //if word = word
+    conv.ask(`You said ${word}`);
+
+
+    //else
+});
+
+
+
+
 app.intent("play", (conv) => {
-  conv.data.right = 10;
-  conv.data.total = 10;
   const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.lang, conv.data.language);
   conv.ask("Well done!");
   conv.ask(new BasicCard({
