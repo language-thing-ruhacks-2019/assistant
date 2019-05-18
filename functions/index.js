@@ -1,7 +1,8 @@
+
 const functions = require('firebase-functions');
 
 const {
-  dialogflow,
+  dialogflow, BasicCard, Suggestions, Image, SimpleResponse
 } = require("actions-on-google");
 
 
@@ -19,18 +20,32 @@ app.intent("practice_select", (conv, {'language': lang}) => {
   conv.data.language = lang;
   conv.ask(`you selected ${lang} `);
   conv.ask(`What level would you like to practice`);
+  conv.ask(new Suggestions(["Beginner", "Elementary", "Intermediate", "Upper Intermediate", "Advanced", "Proficient"]));
+
 });
 
 app.intent("level_select", (conv, {'difficulty': lev}) => {
+  lev--;
+  conv.data.lev = lev;
   conv.ask(`Alright, starting practice at ${levels[lev]} for ${conv.data.language}`);
 });
 
-app.intent("start_practice", (conv) => {
-  conv.ask(`bp`);
-});
 
-app.intent("last_score", (conv) => {
-  conv.ask(`bp`);
+app.intent("play", (conv) => {
+  const score = conv.data.right;
+  conv.ask("Well done!");
+  conv.ask(new BasicCard({
+    text: `You could understand ${conv.data.right}/${conv.data.total} words in ${conv.data.language} at ${levels[conv.data.lev]}
+    Why not try ${levels[++conv.data.lev]}
+    `, //
+    subtitle: 'you scored perfect',
+    title: 'Well done!',
+    image: new Image({
+      url: 'https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg',
+      alt: 'Image alternate text',
+    }),
+    display: 'CROPPED',
+  }));
 });
 
 const langs =  {
@@ -219,7 +234,7 @@ const langs =  {
   "Chinese": "zh",
   "Zulu": "zu"
 }
-const levels = ["A1, Elementary", "A2, Beginner", "B1, Intermediate", "B2, Upper Intermediate", "C1, Advanced", "C2, Proficient"];
+const levels = ["A1, Beginner", "A2, Elementary", "B1, Intermediate", "B2, Upper Intermediate", "C1, Advanced", "C2, Proficient"];
 
 
 exports.test = functions.https.onRequest(app);
