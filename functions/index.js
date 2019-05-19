@@ -227,7 +227,7 @@ function generateBlurb(score, total, level, language, lang) {
 
 const wavenet = {
     "German": "de-DE-Wavenet-A",
-    "French": "fr-FR-Wavenet-B",
+    "French": "fr-FR-Wavenet-A",
     "Portuguese": "pt-PT-Wavenet-A",
     "Russian": "ru-RU-Wavenet-A",
     "Korean": "ko-KR-Wavenet-B",
