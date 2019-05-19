@@ -36,13 +36,14 @@ app.intent("level_select", (conv, {'difficulty': lev}) => {
 app.intent("level yes", async (conv) => {
     conv.data.right = 0;
     const pair = await getRandomWord(conv.data.lev, conv.data.lang);
-    const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${pair.word}`;
+    const url = getURL(conv.data.lang, pair.word, conv.data.language);
     conv.data.lastWord = pair.word;
 
     conv.ask(new SimpleResponse({
         text: `What does ${pair.trans} mean`,
         speech: `<speak>What does <audio src="${url}"></audio>mean?</speak>`,
     }));
+    conv.data.total++;
 });
 
 app.intent("level no", (conv) => {
@@ -63,7 +64,7 @@ app.intent("ask word", async (conv, {"any": guess}) => {
 
     if (conv.data.total < 3) {
         const pair = await getRandomWord(conv.data.lev, conv.data.lang);
-        const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${pair.word}`;
+        const url = getURL(conv.data.lang, pair.word, conv.data.language);
         conv.data.lastWord = pair.word;
         conv.ask(new SimpleResponse({
             text: `What does ${pair.trans} mean?`,
@@ -96,6 +97,17 @@ app.intent("ask word", async (conv, {"any": guess}) => {
         }));
     }
 });
+
+function getURL(lang, word, language){
+    let url;
+    if(wavenet[language] !== undefined) {
+        url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${lang}/${word}/${language}`;
+    } else{
+        url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${lang}/${word}`;
+    }
+    return url;
+}
+
 
 async function getRandomWord(level, lang) {
     const word = words(level);
@@ -212,16 +224,16 @@ function generateBlurb(score, total, level, language, lang) {
 }
 
 const wavenet = {
-    "German": "/de-DE-Wavenet-A",
-    "French": "/fr-FR-Wavenet-B",
-    "Portuguese": "/pt-PT-Wavenet-A",
-    "Russian": "/ru-RU-Wavenet-A",
-    "Korean": "/ko-KR-Wavenet-B",
+    "German": "de-DE-Wavenet-A",
+    "French": "fr-FR-Wavenet-B",
+    "Portuguese": "pt-PT-Wavenet-A",
+    "Russian": "ru-RU-Wavenet-A",
+    "Korean": "ko-KR-Wavenet-B",
     "English": "en-US-Wavenet-A",
     "Japanese": "ja-JP-Wavenet-A",
 }
 
-const all = {
+const langs = {
     "Afar": "aa",
     "Abkhazian": "ab",
     "Avestan": "ae",
@@ -409,8 +421,5 @@ const all = {
 }
 
 const levels = ["A1, Beginner", "A2, Elementary", "B1, Intermediate", "B2, Upper Intermediate", "C1, Advanced", "C2, Proficient"];
-
-const langs = Object.setPrototypeOf(wavenet, all);
-
 
 exports.test = functions.https.onRequest(app);
