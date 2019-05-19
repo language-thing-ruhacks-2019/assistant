@@ -116,8 +116,6 @@ async function getRandomWord(level, lang) {
     const transRequest = await fetch(`https://speech-server-ruhacks-2019.appspot.com/api/trans/en-US/${lang}/${word}`);
     const trans = await transRequest.json();
     const transText = trans.TranslatedText;
-    console.log(`trans: ${trans}`);
-    console.log(transText);
 
     return {"word": word, "trans": transText};
 }
