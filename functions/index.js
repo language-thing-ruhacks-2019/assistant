@@ -109,7 +109,7 @@ async function getRandomWord(level, lang) {
 }
 
 app.intent("stats", (conv) => {
-    const resp = generateLanguages(conv.user.storage.languages, conv.user.storage.langData);
+    const resp = generateLanguages(Array.from(conv.user.storage.languages), conv.user.storage.langData);
     conv.ask('Here are your stats');
 
     conv.ask(new List({
