@@ -42,10 +42,6 @@ app.intent("level yes", async (conv) => {
         text: `What does ${pair.trans} mean`,
         speech: `<speak>What does <audio src="${url}"></audio>mean?</speak>`,
     }));
-    conv.ask(new BasicCard({
-        description: pair.trans,
-        display: 'CROPPED',
-    }));
     conv.data.total++;
 });
 
@@ -56,7 +52,7 @@ app.intent("level no", (conv) => {
 
 app.intent("ask word", async (conv, {"any": guess}) => {
     if(conv.data.total < 3){
-        if(guess === conv.data.lastWord){
+        if((guess).toLowerCase() === conv.data.lastWord){
             conv.ask('That\'s correct!\n');
         }
         else{
@@ -67,27 +63,31 @@ app.intent("ask word", async (conv, {"any": guess}) => {
         const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${pair.word}`;
         conv.data.lastWord = pair.word;
         conv.ask( new SimpleResponse({
-            //text: `What does ${pair.trans} mean?`,
-            text: `What does BLANK mean?`,
+            text: `What does ${pair.trans} mean?`,
             speech: `<speak>Now, what does <audio src="${url}"></audio>mean?</speak>`,
         }));
 
         conv.data.total++;
     } else if (conv.data.total === 3){
-        if(guess === conv.data.lastWord){
+        if((guess).toLowerCase() === conv.data.lastWord){
             conv.ask('That\'s correct!\n');
         }
         else{
             conv.ask(`Sorry, you said ${guess}, but the correct answer is ${conv.data.lastWord}.\n`);
         }
         conv.ask(`You finished all 3 words. Here are some stats:`);
+    } else{
+        conv.close('You finished all your vocab. Good Job!');
     }
 });
 
 async function getRandomWord(level, lang){
     const word = words(level);
-    const trans = (await fetch(`https://speech-server-ruhacks-2019.appspot.com/api/trans/en-US/${lang}/${word}`));
-    const transText = trans.OriginalText;
+    const transRequest = await fetch(`https://speech-server-ruhacks-2019.appspot.com/api/trans/en-US/${lang}/${word}`);
+    const trans = await transRequest.json();
+    const transText = trans.TranslatedText;
+    console.log(`trans: ${trans}`);
+    console.log(transText);
 
     return {"word": word, "trans": transText};
 }
