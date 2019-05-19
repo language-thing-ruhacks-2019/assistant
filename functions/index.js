@@ -34,8 +34,7 @@ app.intent("level_select", (conv, {'difficulty': lev}) => {
 });
 
 app.intent("level yes", async (conv) => {
-    conv.data.total = 0;
-    conv.data.total = 0;
+    conv.data.right = 0;
     const pair = await getRandomWord(conv.data.lev, conv.data.lang);
     const url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${conv.data.lang}/${pair.word}`;
     conv.data.lastWord = pair.word;
@@ -54,12 +53,10 @@ app.intent("level no", (conv) => {
 app.intent("ask word", async (conv, {"any": guess}) => {
 
     if ((guess).toLowerCase() === conv.data.lastWord) {
-        conv.data.total++;
         conv.data.right++;
 
         conv.ask('That\'s correct!\n');
     } else {
-        conv.data.total++;
 
         conv.ask(`Sorry, you said ${guess}, but the correct answer is ${conv.data.lastWord}.\n`);
     }
@@ -76,11 +73,21 @@ app.intent("ask word", async (conv, {"any": guess}) => {
         conv.data.total++;
     } else if (conv.data.total === 3) {
         const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.language, conv.data.lang);
-        conv.ask(response.title);
-        conv.ask(new BasicCard({
+        if(conv.user.storage.languages === undefined){
+            conv.user.storage.languages = new Set()
+        }
+        conv.user.storage.languages.add(conv.data.language);
+        if(conv.user.storage.langData === undefined) conv.user.storage.langData = {};
+        if(resp.passed && (conv.user.storage.langData[conv.data.language] < conv.data.lev ||
+            conv.user.storage.langData[conv.data.language] === undefined
+        )){
+            conv.user.storage.langData[conv.data.language] = conv.data.lev;
+        }
+        conv.ask(resp.subtitle);
+        conv.close(new BasicCard({
             text: resp.text,
             subtitle: resp.subtitle,
-            title: 'Well done!',
+            title: resp.title,
             image: new Image({
                 url: resp.url,
                 alt: 'Image alternate text',
@@ -102,10 +109,7 @@ async function getRandomWord(level, lang) {
 }
 
 app.intent("stats", (conv) => {
-    const resp = generateLanguages(["English", "Russian"], {
-        English: 'No level',
-        Russian: 'Advanced'
-    });
+    const resp = generateLanguages(conv.user.storage.languages, conv.user.storage.langData);
     conv.ask('Here are your stats');
 
     conv.ask(new List({
