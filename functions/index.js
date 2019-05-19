@@ -210,8 +210,18 @@ function generateBlurb(score, total, level, language, lang) {
   return response;
 }
 
+const wavenet = {
+    "German": "/de-DE-Wavenet-A",
+    "French": "/fr-FR-Wavenet-B",
+    "Portuguese": "/pt-PT-Wavenet-A",
+    "Russian": "/ru-RU-Wavenet-A",
+    "Korean": "/ko-KR-Wavenet-B",
+    "English": "en-US-Wavenet-A",
+    "Japanese": "ja-JP-Wavenet-A",
+}
 
-const langs = {
+
+const all = {
   "Afar": "aa",
   "Abkhazian": "ab",
   "Avestan": "ae",
@@ -398,6 +408,8 @@ const langs = {
   "Zulu": "zu"
 }
 const levels = ["A1, Beginner", "A2, Elementary", "B1, Intermediate", "B2, Upper Intermediate", "C1, Advanced", "C2, Proficient"];
+
+const langs = Object.setPrototypeOf(wavenet, all);
 
 
 exports.test = functions.https.onRequest(app);
