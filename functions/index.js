@@ -74,16 +74,33 @@ app.intent("ask word", async (conv, {"any": guess}) => {
         conv.data.total++;
     } else if (conv.data.total === 3) {
         const resp = generateBlurb(conv.data.right, conv.data.total, conv.data.lev, conv.data.language, conv.data.lang);
-        if(conv.user.storage.languages === undefined){
-            conv.user.storage.languages = new Set()
+
+        let languages;
+        try {
+            languages = JSON.parse(conv.user.storage.languages);
+        }catch (e) {
+            languages = []
         }
-        conv.user.storage.languages.add(conv.data.language);
-        if(conv.user.storage.langData === undefined) conv.user.storage.langData = {};
-        if(resp.passed && (conv.user.storage.langData[conv.data.language] < conv.data.lev ||
-            conv.user.storage.langData[conv.data.language] === undefined
+
+        let langData;
+        try {
+            langData = JSON.parse(conv.user.storage.langData);
+        }catch (e) {
+            langData = {}
+        }
+
+
+        if(!languages.includes(conv.data.language)) languages.push(conv.data.language);
+        if(langData === undefined) langData = {};
+        if(resp.passed && (langData[conv.data.language] < conv.data.lev ||
+            langData[conv.data.language] === undefined
         )){
-            conv.user.storage.langData[conv.data.language] = conv.data.lev;
+            langData[conv.data.language] = conv.data.lev;
         }
+
+        conv.user.storage.languages = JSON.stringify(languages);
+        conv.user.storage.langData = JSON.stringify(langData);
+
         conv.ask(resp.subtitle);
         conv.close(new BasicCard({
             text: resp.text,
@@ -123,7 +140,27 @@ async function getRandomWord(level, lang) {
 }
 
 app.intent("stats", (conv) => {
-    const resp = generateLanguages(Array.from(conv.user.storage.languages), conv.user.storage.langData);
+    let languages;
+    try {
+        languages = JSON.parse(conv.user.storage.languages);
+    }catch (e) {
+        languages = []
+    }
+
+    let langData;
+    try {
+        langData = JSON.parse(conv.user.storage.langData);
+    }catch (e) {
+        langData = {}
+    }
+
+    if(languages.length < 2){
+        conv.ask("Practice more languages to get stats!");
+        return
+    }
+
+    const resp = generateLanguages(languages,
+      langData);
     conv.ask('Here are your stats');
 
     conv.ask(new List({
@@ -140,7 +177,7 @@ function generateLanguages(languages, langData) {
     languages.forEach(language => {
         items[language] = {
             title: language,
-            description: langData[language],
+            description: levels[langData[language]],
             image: new Image({
                 url: getFlag(langs[language]),
                 alt: 'Image alternate text',
