@@ -101,10 +101,12 @@ app.intent("ask word", async (conv, {"any": guess}) => {
 function getURL(lang, word, language){
     let url;
     if(wavenet[language] !== undefined) {
-        url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${lang}/${word}/${language}`;
+        url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${lang}/${word}/${wavenet[language]}`;
     } else{
         url = `https://speech-server-ruhacks-2019.appspot.com/api/sound/trans/en-US/${lang}/${word}`;
     }
+    console.log(wavenet[language]);
+    console.log(url);
     return url;
 }
 
