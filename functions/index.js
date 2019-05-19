@@ -13,7 +13,13 @@ const app = dialogflow({debug: true});
 
 // Handlers go here..
 app.intent("Hello World", conv => {
-    conv.ask(`<speak>Hello world <audio src="https://speech-server-ruhacks-2019.appspot.com/api/sound/ru-RU/blyat"></audio></speak>`)
+    conv.ask(`<speak>Hello world <audio src="https://speech-server-ruhacks-2019.appspot.com/api/sound/ru-RU/hello"></audio></speak>`)
+});
+
+app.intent("Welcome Intent", conv => {
+    conv.ask("Welcome back! What language do you want to practice?");
+    conv.ask(new Suggestions(["Practice Russian", "Show History", "Show Stats"]));
+
 });
 
 app.intent("practice_select", (conv, {'language': lang}) => {
@@ -21,7 +27,7 @@ app.intent("practice_select", (conv, {'language': lang}) => {
     conv.data.language = lang;
     conv.ask(`Sure, let's practice ${lang}. \n`);
     conv.ask(`What level would you like to practice`);
-    conv.ask(new Suggestions(["Beginner", "Elementary", "Intermediate", "Upper Intermediate", "Advanced", "Proficient"]));
+    conv.ask(new Suggestions(["Beginner", "Elementary", "Intermediate", "Upper Intermediate", "Proficient"]));
 
 });
 
@@ -89,6 +95,19 @@ app.intent("ask word", async (conv, {"any": guess}) => {
             langData = {}
         }
 
+        let history;
+        try {
+            history = JSON.parse(conv.user.storage.history);
+        }catch (e) {
+            history = []
+        }
+
+        history.unshift({
+            language: conv.data.language,
+            score: `${conv.data.right}/${conv.data.total}`,
+            level: levels[conv.data.lev]
+        });
+
 
         if(!languages.includes(conv.data.language)) languages.push(conv.data.language);
         if(langData === undefined) langData = {};
@@ -100,6 +119,7 @@ app.intent("ask word", async (conv, {"any": guess}) => {
 
         conv.user.storage.languages = JSON.stringify(languages);
         conv.user.storage.langData = JSON.stringify(langData);
+        conv.user.storage.history = JSON.stringify(history);
 
         conv.ask(resp.subtitle);
         conv.close(new BasicCard({
@@ -154,6 +174,8 @@ app.intent("stats", (conv) => {
         langData = {}
     }
 
+
+
     if(languages.length < 2){
         conv.ask("Practice more languages to get stats!");
         return
@@ -161,7 +183,7 @@ app.intent("stats", (conv) => {
 
     const resp = generateLanguages(languages,
       langData);
-    conv.ask('Here are your stats');
+    conv.ask('Here are some stats');
 
     conv.ask(new List({
           title: 'Your Language Statistics',
@@ -170,6 +192,48 @@ app.intent("stats", (conv) => {
     ));
 });
 
+app.intent("history", (conv) => {
+    let history;
+    try {
+        history = JSON.parse(conv.user.storage.history);
+    }catch (e) {
+        history = []
+    }
+
+    if(history.length < 2){
+        conv.ask("Practice more languages to get stats!");
+        return
+    }
+
+    const resp = generateHistory(history);
+    conv.ask('Here is your history');
+
+    conv.ask(new List({
+          title: 'Your History',
+          items: resp,
+      }
+    ));
+});
+
+
+function generateHistory(history) {
+    const items = {};
+
+    if(history.length > 30) history = history.splice(0, 29);
+
+    history.forEach((event, i) => {
+        items[event.language + i] = {
+            title: `(${i + 1}) ${event.language}`,
+            description: `${event.level}\nScore: ${event.score}`,
+            image: new Image({
+                url: getFlag(langs[event.language]),
+                alt: 'Image alternate text',
+            }),
+        }
+    });
+
+    return items;
+}
 
 function generateLanguages(languages, langData) {
     const items = {};
